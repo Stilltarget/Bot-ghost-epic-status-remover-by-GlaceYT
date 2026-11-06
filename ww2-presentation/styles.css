@@ -827,3 +827,235 @@ html.still *, html.still *::before, html.still *::after {
     transition: none !important;
   }
 }
+
+html.is-phone, html.is-phone body {
+  height: 100%;
+  height: 100svh;
+}
+
+html.is-phone body {
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+html.is-phone #viewport {
+  display: block;
+  height: 100svh;
+  padding: 0;
+}
+
+html.is-phone #stage {
+  width: 100%;
+  height: calc(100svh - 96px - env(safe-area-inset-bottom));
+  transform: none !important;
+  box-shadow: none;
+}
+
+html.is-phone .slide {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+html.is-phone .slide.paper.is-current,
+html.is-phone .slide.paper.is-under,
+html.is-phone .slide.paper.is-leaving {
+  padding: 14px 14px 10px !important;
+}
+
+html.is-phone .mast {
+  margin: 0 !important;
+  gap: 8px;
+}
+
+html.is-phone .name { font-size: 34px; }
+html.is-phone .poster .mini .name,
+html.is-phone .full .mini.corner .name { font-size: 20px; }
+
+html.is-phone .dateline { letter-spacing: 0.12em; font-size: 10px; }
+
+html.is-phone .hed {
+  font-size: clamp(34px, 10vw, 52px);
+}
+
+html.is-phone .hedrow {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+html.is-phone .stamp {
+  margin-top: 0;
+  font-size: 13px;
+  padding: 7px 8px 6px;
+  letter-spacing: 0.08em;
+}
+
+html.is-phone .cols,
+html.is-phone .pair,
+html.is-phone .quiet-grid,
+html.is-phone .record {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+html.is-phone .cols p,
+html.is-phone .sheet p,
+html.is-phone .ticker p,
+html.is-phone .quiet-grid p {
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+html.is-phone .shot img,
+html.is-phone .wide img,
+html.is-phone .side .shot img,
+html.is-phone .halftone::after {
+  height: 190px;
+}
+
+html.is-phone .pull { font-size: 20px; }
+
+html.is-phone .foot {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  gap: 8px;
+}
+
+html.is-phone .as-written { font-size: 15px; }
+
+html.is-phone .quiet .hed { font-size: 36px; }
+html.is-phone .doc img { height: 210px; }
+html.is-phone .note { font-size: 18px !important; }
+
+html.is-phone .giant {
+  font-size: clamp(52px, 15vw, 92px);
+  top: 11svh;
+  left: 0;
+  right: 0;
+}
+
+html.is-phone .giant.one {
+  font-size: clamp(76px, 24vw, 140px);
+  top: 16svh;
+}
+
+html.is-phone .ticker,
+html.is-phone .sheet {
+  left: 10px;
+  right: 10px;
+  bottom: 8px;
+  max-height: 42%;
+  overflow: auto;
+  padding: 12px 12px 10px;
+}
+
+html.is-phone .ticker { left: 0; right: 0; bottom: 0; }
+html.is-phone .sheet .hed,
+html.is-phone .ticker .hed { font-size: 28px; }
+html.is-phone .sheet .cap,
+html.is-phone .ticker .cap { font-size: 12px; }
+
+html.is-phone .pile {
+  position: relative;
+  inset: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 0 8px;
+}
+
+html.is-phone .card,
+html.is-phone .c1,
+html.is-phone .c2,
+html.is-phone .c3,
+html.is-phone .august .card.big,
+html.is-phone .diag,
+html.is-phone .clip {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  width: auto;
+  transform: none;
+}
+
+html.is-phone .card img,
+html.is-phone .august .card.big img { height: 180px; }
+
+html.is-phone .diag {
+  font-size: 34px;
+  margin: 4px 0;
+  box-shadow: 4px 4px 0 var(--red);
+}
+
+html.is-phone .inkring,
+html.is-phone .pen,
+html.is-phone .flag { display: none; }
+
+html.is-phone .clips {
+  position: relative;
+  right: auto;
+  top: auto;
+  width: auto;
+  margin-top: 14px;
+}
+
+html.is-phone .banner { font-size: 32px; margin: 0 0 8px 0; }
+html.is-phone .clip { margin-left: 0; }
+html.is-phone .clip h3 { font-size: 18px; }
+
+html.is-phone .august > .foot {
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 14px 0 4px !important;
+}
+
+html.is-phone .time li {
+  grid-template-columns: 64px 1fr;
+  gap: 8px;
+}
+
+html.is-phone .time b { font-size: 18px; }
+html.is-phone .colo p { font-size: 13px; }
+
+html.is-phone .slide.is-in .card,
+html.is-phone .slide.is-in .diag,
+html.is-phone .slide.is-in .clip,
+html.is-phone .slide.is-in .stamp,
+html.is-phone .slide.is-in .august .card.big {
+  animation-name: rise;
+}
+
+html.is-phone #hint {
+  top: calc(8px + env(safe-area-inset-top));
+  width: 92%;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+html.is-phone #chrome {
+  left: 8px;
+  right: 8px;
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  transform: none;
+  width: auto;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 16px;
+}
+
+html.is-phone #chrome button,
+html.is-phone #group {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 16px;
+}
+
+html.is-phone #group { width: 96px; flex: 1; }
+html.is-phone #full { display: none; }
+html.is-phone #count { font-size: 12px; min-width: 42px; }

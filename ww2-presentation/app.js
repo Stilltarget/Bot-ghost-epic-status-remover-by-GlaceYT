@@ -16,10 +16,25 @@
   let timer = 0;
   let idleTimer = 0;
 
+  const hint = document.getElementById("hint");
+  const desktopHint = hint.textContent;
+
+  function isPhone() {
+    return document.documentElement.classList.contains("is-phone");
+  }
+
   function fit() {
+    const scale = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    const phone = scale < 0.78;
+    document.documentElement.classList.toggle("is-phone", phone);
+    hint.textContent = phone ? "Swipe sideways" : desktopHint;
+    if (phone) {
+      stage.style.transform = "none";
+      return;
+    }
     const vp = document.getElementById("viewport");
-    const scale = Math.min(vp.clientWidth / 1600, vp.clientHeight / 900);
-    stage.style.transform = "scale(" + scale + ")";
+    const fitted = Math.min(vp.clientWidth / 1600, vp.clientHeight / 900);
+    stage.style.transform = "scale(" + fitted + ")";
   }
 
   function applyGroup() {
@@ -204,19 +219,23 @@
   function poke() {
     chrome.classList.remove("idle");
     clearTimeout(idleTimer);
+    if (isPhone()) return;
     idleTimer = setTimeout(function () { chrome.classList.add("idle"); }, 2400);
+  }
+
+  function stopPlay() {
+    playing = false;
+    playBtn.textContent = "Play";
   }
 
   document.getElementById("next").addEventListener("click", function (event) {
     event.stopPropagation();
-    playing = false;
-    playBtn.textContent = "Play";
+    stopPlay();
     nextSlide();
   });
   document.getElementById("prev").addEventListener("click", function (event) {
     event.stopPropagation();
-    playing = false;
-    playBtn.textContent = "Play";
+    stopPlay();
     prevSlide();
   });
   playBtn.addEventListener("click", function (event) {
@@ -230,13 +249,31 @@
   });
 
   stage.addEventListener("click", function (event) {
+    if (isPhone()) return;
     if (event.target.closest("#chrome")) return;
     const rect = stage.getBoundingClientRect();
-    playing = false;
-    playBtn.textContent = "Play";
+    stopPlay();
     if (event.clientX < rect.left + rect.width * 0.18) prevSlide();
     else nextSlide();
   });
+
+  let touchX = 0;
+  let touchY = 0;
+  stage.addEventListener("touchstart", function (event) {
+    if (event.touches.length !== 1) return;
+    touchX = event.touches[0].clientX;
+    touchY = event.touches[0].clientY;
+  }, { passive: true });
+  stage.addEventListener("touchend", function (event) {
+    if (!isPhone()) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - touchX;
+    const dy = touch.clientY - touchY;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return;
+    stopPlay();
+    if (dx < 0) nextSlide();
+    else prevSlide();
+  }, { passive: true });
 
   window.addEventListener("keydown", function (event) {
     if (event.target === groupInput) return;
@@ -260,6 +297,8 @@
   applyGroup();
 
   window.addEventListener("resize", fit);
+  window.addEventListener("orientationchange", fit);
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", fit);
   document.addEventListener("mousemove", poke);
   fit();
 
