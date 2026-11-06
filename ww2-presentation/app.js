@@ -25,8 +25,7 @@
   }
 
   function fit() {
-    const scale = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
-    const phone = scale < 0.78;
+    const phone = window.innerWidth <= 760;
     document.documentElement.classList.toggle("is-phone", phone);
     hint.textContent = phone ? "Swipe sideways" : desktopHint;
     if (phone) {
@@ -35,10 +34,10 @@
       stage.style.transform = "none";
       return;
     }
-    const chrome = 84;
-    const fitted = Math.min(window.innerWidth / 1600, (window.innerHeight - chrome) / 900);
+    const vp = document.getElementById("viewport");
+    const fitted = Math.min(vp.clientWidth / 1600, vp.clientHeight / 900);
     stage.style.left = "50%";
-    stage.style.top = ((window.innerHeight - chrome) / 2) + "px";
+    stage.style.top = "50%";
     stage.style.transform = "translate(-50%, -50%) scale(" + fitted + ")";
   }
 
@@ -132,24 +131,13 @@
     burst.classList.add("on");
   }
 
-  async function zoom(from, to) {
+  async function slam(from, to) {
     hitFlash(to.dataset.flash || "#f3efe4");
-    flashBurst(to.dataset.flash === "#b11226" ? "#f6efe2" : "#f3efe4");
+    clearRoles(to);
     to.classList.add("is-current");
-    to.style.transition = "none";
-    to.style.transformOrigin = "center center";
-    to.style.transform = "scale(0.38) rotate(-1.5deg)";
-    void to.offsetWidth;
-    from.style.zIndex = "3";
-    from.style.transition = "transform .28s ease-in, opacity .28s ease-in";
-    from.style.transform = "scale(1.18)";
-    from.style.opacity = "0";
-    to.style.transition = "transform .46s cubic-bezier(.12,1.25,.28,1)";
-    to.style.transform = "scale(1) rotate(0deg)";
     arm(to);
-    await wait(480);
+    await wait(120);
     resetMotion(from);
-    burst.classList.remove("on");
   }
 
   async function pan(from, to, dir) {
@@ -159,11 +147,11 @@
     to.style.transform = "translate3d(0," + (sign * 104) + "%,0)";
     void to.offsetWidth;
     from.style.zIndex = "4";
-    from.style.transition = "transform .3s cubic-bezier(.7,0,.15,1)";
-    to.style.transition = "transform .34s cubic-bezier(.14,1.05,.3,1)";
+    from.style.transition = "transform .24s cubic-bezier(.7,0,.2,1)";
+    to.style.transition = "transform .26s cubic-bezier(.16,1,.3,1)";
     from.style.transform = "translate3d(0," + (-sign * 108) + "%,0)";
     to.style.transform = "translate3d(0,0,0)";
-    await wait(350);
+    await wait(270);
     resetMotion(from);
   }
 
@@ -172,35 +160,27 @@
     to.classList.add("is-current");
     to.style.transition = "none";
     to.style.transformOrigin = "center center";
-    to.style.transform = "translate3d(" + (sign * 104) + "%,0,0) rotate(" + (sign * 3) + "deg)";
-    to.style.filter = "blur(8px)";
+    to.style.transform = "translate3d(" + (sign * 100) + "%,0,0) rotate(" + (sign * 2) + "deg)";
     void to.offsetWidth;
     from.style.zIndex = "4";
-    from.style.transition = "transform .26s cubic-bezier(.65,0,.2,1), filter .26s";
-    to.style.transition = "transform .32s cubic-bezier(.12,1.15,.28,1), filter .28s";
-    from.style.transform = "translate3d(" + (-sign * 108) + "%,0,0) rotate(" + (-sign * 4) + "deg)";
-    from.style.filter = "blur(6px)";
+    from.style.transition = "transform .22s cubic-bezier(.65,0,.2,1)";
+    to.style.transition = "transform .24s cubic-bezier(.16,1,.3,1)";
+    from.style.transform = "translate3d(" + (-sign * 104) + "%,0,0) rotate(" + (-sign * 2) + "deg)";
     to.style.transform = "translate3d(0,0,0) rotate(0deg)";
-    to.style.filter = "none";
-    await wait(330);
+    await wait(250);
     resetMotion(from);
   }
 
   async function throwCard(from, to) {
-    to.classList.add("is-current");
-    to.style.transition = "none";
-    to.style.transformOrigin = "70% 60%";
-    to.style.transform = "translate3d(42%, 10%, 0) rotate(9deg) scale(0.55)";
-    void to.offsetWidth;
-    from.style.zIndex = "4";
-    from.style.transformOrigin = "20% 40%";
-    from.style.transition = "transform .32s cubic-bezier(.55,0,.2,1), opacity .32s ease-in";
-    to.style.transition = "transform .4s cubic-bezier(.12,1.35,.28,1)";
-    from.style.transform = "translate3d(-36%, -8%, 0) rotate(-11deg) scale(0.62)";
-    from.style.opacity = "0";
-    to.style.transform = "translate3d(0,0,0) rotate(0deg) scale(1)";
+    to.classList.add("is-under");
     arm(to);
-    await wait(420);
+    void to.offsetWidth;
+    from.style.zIndex = "5";
+    from.style.transformOrigin = "12% 20%";
+    from.style.transition = "transform .26s cubic-bezier(.55,0,.25,1), opacity .26s ease-in";
+    from.style.transform = "translate3d(-46%, -6%, 0) rotate(-12deg) scale(0.72)";
+    from.style.opacity = "0";
+    await wait(270);
     resetMotion(from);
   }
 
@@ -224,11 +204,8 @@
     const kind = reduced ? "cut" : (!forward ? "truck" : (to.dataset.trans || "truck"));
     let keep = false;
 
-    if (kind === "cut") {
-      clearRoles(to);
-      to.classList.add("is-current");
-    } else if (kind === "zoom") {
-      await zoom(from, to);
+    if (kind === "cut" || kind === "slam") {
+      await slam(from, to);
       keep = true;
     } else if (kind === "pan") {
       await pan(from, to, forward ? 1 : -1);
@@ -243,24 +220,6 @@
     }
 
     finish(next, keep);
-  }
-
-  function intro() {
-    if (reduced || document.documentElement.classList.contains("still")) return;
-    const slide = slides[0];
-    flashBurst("#161616");
-    slide.style.transformOrigin = "center center";
-    slide.style.transition = "none";
-    slide.style.transform = "scale(0.42)";
-    void slide.offsetWidth;
-    slide.style.transition = "transform .62s cubic-bezier(.14,1.2,.3,1)";
-    slide.style.transform = "scale(1)";
-    setTimeout(function () {
-      if (index !== 0) return;
-      slide.style.transition = "";
-      slide.style.transform = "";
-      burst.classList.remove("on");
-    }, 680);
   }
 
   function nextSlide() { go(Math.min(slides.length - 1, index + 1)); }
@@ -290,7 +249,6 @@
     chrome.classList.remove("idle");
     clearTimeout(idleTimer);
     if (isPhone()) return;
-    idleTimer = setTimeout(function () { chrome.classList.add("idle"); }, 2400);
   }
 
   function stopPlay() {
@@ -382,6 +340,5 @@
   }
   showCount();
   poke();
-  if (!(jump > 0)) intro();
   window.__deck = { go: go, count: function () { return slides.length; } };
 })();
