@@ -642,6 +642,29 @@ button, input { font: inherit; }
   transform: scaleX(0);
   transform-origin: left center;
 }
+#flash {
+  position: absolute;
+  inset: 0;
+  z-index: 36;
+  pointer-events: none;
+  opacity: 0;
+}
+#flash.go { animation: flashhit 0.26s ease-out both; }
+@keyframes flashhit {
+  0% { opacity: 1; }
+  45% { opacity: 0.35; }
+  100% { opacity: 0; }
+}
+#stage.hit { animation: hitshake 0.32s linear; }
+@keyframes hitshake {
+  0%, 100% { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45); }
+  30% { box-shadow: inset 0 0 0 16px rgba(255, 255, 255, 0.55), 0 30px 80px rgba(0, 0, 0, 0.45); }
+}
+.slash-in { animation: slash 0.22s cubic-bezier(.7, 0, .2, 1) both; }
+@keyframes slash {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}
 #wipe.run { animation: wipe 0.52s cubic-bezier(.7,0,.3,1) both; }
 @keyframes wipe {
   0% { transform: scaleX(0); transform-origin: left center; }
@@ -650,12 +673,16 @@ button, input { font: inherit; }
   100% { transform: scaleX(0); transform-origin: right center; }
 }
 #hair {
-  left: 0; right: 0; top: 50%;
-  height: 3px;
+  left: -8%;
+  right: -8%;
+  top: 42%;
+  height: 10px;
   background: var(--red);
-  transform: scaleX(0);
+  box-shadow: 0 0 0 2px #f3efe4;
+  transform: scaleX(0) rotate(-7deg);
+  transform-origin: left center;
 }
-#hair.run { animation: hair 0.48s ease both; }
+#hair.run { animation: hair 0.28s cubic-bezier(.7,0,.2,1) both; }
 @keyframes hair {
   0% { transform: scaleX(0); }
   35% { transform: scaleX(1); }
@@ -683,22 +710,22 @@ button, input { font: inherit; }
 }
 
 .slide.is-in .mast { animation: rise 0.55s both; }
-.slide.is-in .hed { animation: burst 0.65s 0.12s both; }
+.slide.is-in .hed { animation: slam 0.42s both; }
 .slide.is-in .cols p { animation: rise 0.55s both; }
 .slide.is-in .cols p:nth-child(1) { animation-delay: 0.18s; }
 .slide.is-in .cols p:nth-child(2) { animation-delay: 0.28s; }
 .slide.is-in .cols p:nth-child(3) { animation-delay: 0.38s; }
-.slide.is-in .shot { animation: rise 0.6s 0.3s both; }
+.slide.is-in .shot { animation: photoin 0.48s 0.08s both; }
 .slide.is-in .stamp { animation: pop 0.42s 0.55s both; }
 .slide.is-in .pull { animation: rise 0.5s 0.45s both; }
-.slide.is-in .giant { animation: stomp 0.55s both; }
-.slide.is-in .ticker, .slide.is-in .sheet { animation: sheetup 0.6s 0.18s both; }
+.slide.is-in .giant { animation: stomp 0.4s both; }
+.slide.is-in .ticker, .slide.is-in .sheet { animation: sheetup 0.42s 0.05s both; }
 .slide.is-in .ken { animation: ken 14s linear both; }
 .slide.is-in .card.c1 { animation: fromL 0.7s both; }
 .slide.is-in .card.c2 { animation: fromR 0.7s 0.1s both; }
 .slide.is-in .card.c3 { animation: fromL3 0.7s 0.18s both; }
 .slide.is-in .august .card.big { animation: fromBig 0.7s both; }
-.slide.is-in .diag { animation: rise 0.55s 0.28s both; }
+.slide.is-in .diag, .slide.is-in .banner { animation: slam 0.42s 0.05s both; }
 .slide.is-in .inkring, .slide.is-in .pen { animation: pop 0.4s 0.45s both; }
 .slide.is-in .clip { animation: rise 0.5s both; }
 .slide.is-in .clip:nth-child(2) { animation-delay: 0.12s; }
@@ -732,13 +759,24 @@ button, input { font: inherit; }
   100% { opacity: 1; transform: rotate(-8deg) scale(1); }
 }
 @keyframes stomp {
-  0% { opacity: 0; transform: translateY(-8%) scale(1.18); }
-  60% { opacity: 1; transform: translateY(1%) scale(1); }
-  100% { opacity: 1; transform: none; }
+  0% { opacity: 0; transform: scale(1.9); filter: blur(3px); }
+  48% { opacity: 1; transform: scale(0.88); filter: none; }
+  72% { transform: scale(1.05); }
+  100% { transform: none; }
 }
 @keyframes sheetup {
-  from { opacity: 0; transform: translateY(48px); }
-  to { opacity: 1; transform: none; }
+  0% { opacity: 0; transform: translateY(64px); }
+  68% { opacity: 1; transform: translateY(-8px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes slam {
+  0% { opacity: 0; transform: scale(1.7) translateY(-8%); filter: blur(6px); }
+  55% { opacity: 1; transform: scale(0.93) translateY(0); filter: none; }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes photoin {
+  0% { opacity: 0; clip-path: inset(10% 6% 100% 6%); transform: scale(1.14); }
+  100% { opacity: 1; clip-path: inset(0); transform: none; }
 }
 @keyframes ken {
   from { transform: scale(1.05); }
@@ -846,7 +884,8 @@ html.is-phone #viewport {
 
 html.is-phone #stage {
   width: 100%;
-  height: calc(100svh - 96px - env(safe-area-inset-bottom));
+  height: calc(100svh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  margin-top: env(safe-area-inset-top);
   transform: none !important;
   box-shadow: none;
 }
@@ -855,6 +894,8 @@ html.is-phone .slide {
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 html.is-phone .slide.paper.is-current,
@@ -936,8 +977,8 @@ html.is-phone .giant {
 }
 
 html.is-phone .giant.one {
-  font-size: clamp(76px, 24vw, 140px);
-  top: 16svh;
+  font-size: clamp(64px, 20vw, 120px);
+  top: 9svh;
 }
 
 html.is-phone .ticker,
@@ -961,8 +1002,8 @@ html.is-phone .pile {
   inset: auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 12px 0 8px;
+  gap: 12px;
+  padding: 8px 0 4px;
 }
 
 html.is-phone .card,
@@ -980,12 +1021,14 @@ html.is-phone .clip {
   transform: none;
 }
 
-html.is-phone .card img,
-html.is-phone .august .card.big img { height: 180px; }
+html.is-phone .card img { height: 132px; }
+html.is-phone .august .card.big img { height: 132px; }
 
 html.is-phone .diag {
+  order: -1;
+  align-self: flex-start;
   font-size: 34px;
-  margin: 4px 0;
+  margin: 2px 0 4px;
   box-shadow: 4px 4px 0 var(--red);
 }
 
@@ -1002,8 +1045,10 @@ html.is-phone .clips {
 }
 
 html.is-phone .banner { font-size: 32px; margin: 0 0 8px 0; }
-html.is-phone .clip { margin-left: 0; }
-html.is-phone .clip h3 { font-size: 18px; }
+html.is-phone .clips { gap: 8px; }
+html.is-phone .clip { margin-left: 0; padding: 8px 10px 10px; }
+html.is-phone .clip h3 { font-size: 17px; margin-bottom: 2px; }
+html.is-phone .clip p { font-size: 14px; line-height: 1.3; }
 
 html.is-phone .august > .foot {
   position: relative !important;
@@ -1022,15 +1067,17 @@ html.is-phone .time b { font-size: 18px; }
 html.is-phone .colo p { font-size: 13px; }
 
 html.is-phone .slide.is-in .card,
-html.is-phone .slide.is-in .diag,
-html.is-phone .slide.is-in .clip,
-html.is-phone .slide.is-in .stamp,
 html.is-phone .slide.is-in .august .card.big {
-  animation-name: rise;
+  animation-name: photoin;
+}
+html.is-phone .slide {
+  padding-bottom: 18px;
+  scroll-padding-bottom: 18px;
 }
 
 html.is-phone #hint {
-  top: calc(8px + env(safe-area-inset-top));
+  top: auto;
+  bottom: calc(78px + env(safe-area-inset-bottom));
   width: 92%;
   text-align: center;
   font-size: 11px;

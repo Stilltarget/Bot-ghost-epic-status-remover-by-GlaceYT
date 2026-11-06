@@ -83,51 +83,98 @@
     return new Promise(function (resolve) { setTimeout(resolve, ms); });
   }
 
-  function runWipe(color) {
-    wipe.style.background = color || "#111111";
-    wipe.classList.remove("run");
-    void wipe.offsetWidth;
-    wipe.classList.add("run");
-    return new Promise(function (resolve) {
-      let settled = false;
-      function done() {
-        if (settled) return;
-        settled = true;
-        wipe.classList.remove("run");
-        resolve();
-      }
-      wipe.addEventListener("animationend", done, { once: true });
-      setTimeout(done, 800);
-    });
+  function resetMotion(el) {
+    el.style.transition = "";
+    el.style.transform = "";
+    el.style.opacity = "";
+    el.style.filter = "";
+    el.style.zIndex = "";
   }
 
-  function nameBox(slide) {
-    return slide.querySelector(".mast .name, .mini .name");
+  function hitFlash(color) {
+    const flash = document.getElementById("flash");
+    flash.style.background = color || "#f3efe4";
+    flash.classList.remove("go");
+    void flash.offsetWidth;
+    flash.classList.add("go");
+    stage.classList.remove("hit");
+    void stage.offsetWidth;
+    stage.classList.add("hit");
   }
 
-  function fly(from, to) {
-    const start = nameBox(from);
-    const end = nameBox(to);
-    if (!start || !end) return Promise.resolve();
-    const a = start.getBoundingClientRect();
-    const bEnd = end;
-    flyer.style.display = "block";
-    flyer.style.transition = "none";
-    flyer.style.left = a.left + "px";
-    flyer.style.top = a.top + "px";
-    flyer.style.fontSize = Math.max(18, a.height * 0.92) + "px";
-    end.style.visibility = "hidden";
-    return wait(30).then(function () {
-      const b = bEnd.getBoundingClientRect();
-      flyer.style.transition = "left .55s cubic-bezier(.2,.7,.2,1), top .55s cubic-bezier(.2,.7,.2,1), font-size .55s cubic-bezier(.2,.7,.2,1)";
-      flyer.style.left = b.left + "px";
-      flyer.style.top = b.top + "px";
-      flyer.style.fontSize = Math.max(18, b.height * 0.92) + "px";
-      return wait(560);
-    }).then(function () {
-      flyer.style.display = "none";
-      end.style.visibility = "";
-    });
+  async function whip(from, to, dir) {
+    const sign = dir < 0 ? -1 : 1;
+    to.classList.add("is-current");
+    to.style.transition = "none";
+    to.style.transform = "translate3d(" + (sign * 108) + "%,0,0)";
+    to.style.filter = "blur(10px)";
+    void to.offsetWidth;
+    from.style.zIndex = "4";
+    from.style.filter = "blur(0px)";
+    from.style.transition = "transform .24s cubic-bezier(.7,0,.15,1), filter .24s";
+    to.style.transition = "transform .3s cubic-bezier(.12,1.2,.22,1), filter .3s";
+    from.style.transform = "translate3d(" + (-sign * 112) + "%,0,0)";
+    from.style.filter = "blur(6px)";
+    to.style.transform = "translate3d(0,0,0)";
+    to.style.filter = "none";
+    await wait(310);
+    resetMotion(from);
+    resetMotion(to);
+  }
+
+  async function smash(from, to) {
+    to.classList.add("is-under");
+    to.style.transition = "none";
+    to.style.transform = "scale(1.55)";
+    to.style.filter = "blur(14px)";
+    void to.offsetWidth;
+    from.style.zIndex = "5";
+    from.style.transition = "transform .2s ease-in, opacity .2s ease-in, filter .2s";
+    to.style.transition = "transform .34s cubic-bezier(.14,1.15,.28,1), filter .28s";
+    from.style.transform = "scale(1.7)";
+    from.style.opacity = "0";
+    from.style.filter = "blur(16px)";
+    to.style.transform = "scale(1)";
+    to.style.filter = "none";
+    arm(to);
+    await wait(350);
+    resetMotion(from);
+    resetMotion(to);
+  }
+
+  async function slash(from, to) {
+    to.classList.add("is-current", "slash-in");
+    from.style.zIndex = "4";
+    from.style.transition = "transform .2s ease-in, opacity .2s ease-in";
+    from.style.transform = "translate3d(-18%,0,0) scale(1.08)";
+    from.style.opacity = "0";
+    hair.classList.remove("run");
+    void hair.offsetWidth;
+    hair.classList.add("run");
+    await wait(240);
+    hair.classList.remove("run");
+    resetMotion(from);
+    to.classList.remove("slash-in");
+  }
+
+  async function impact(from, to) {
+    hitFlash(to.dataset.flash);
+    await wait(70);
+    clearRoles(to);
+    to.classList.add("is-current");
+    arm(to);
+    await wait(260);
+  }
+
+  async function fade(from, to) {
+    const slow = to.classList.contains("quiet");
+    to.classList.add("is-under");
+    arm(to);
+    from.classList.add("is-leaving");
+    from.style.transition = "opacity " + (slow ? "1s" : ".28s") + " ease";
+    from.style.opacity = "0";
+    await wait(slow ? 1000 : 300);
+    resetMotion(from);
   }
 
   async function go(next) {
@@ -136,61 +183,28 @@
     const from = slides[index];
     const to = slides[next];
     const forward = next > index;
-    const kind = reduced || !forward ? "dissolve" : (to.dataset.trans || "dissolve");
+    const kind = reduced ? "cut" : (!forward ? "whip" : (to.dataset.trans || "whip"));
+    let keep = false;
 
-    if (kind === "wipe") {
-      const covered = runWipe(to.dataset.wipe);
-      await wait(230);
+    if (kind === "cut") {
       clearRoles(to);
       to.classList.add("is-current");
-      arm(to);
-      index = next;
-      showCount();
-      await covered;
-      lock = false;
-      schedule();
-      return;
+    } else if (kind === "impact") {
+      await impact(from, to);
+      keep = true;
+    } else if (kind === "smash") {
+      await smash(from, to);
+      keep = true;
+    } else if (kind === "slash") {
+      await slash(from, to);
+    } else if (kind === "fade") {
+      await fade(from, to);
+      keep = true;
+    } else {
+      await whip(from, to, forward ? 1 : -1);
     }
 
-    if (kind === "line") {
-      clearRoles(to);
-      to.classList.add("is-current", "line-in");
-      arm(to);
-      hair.classList.remove("run");
-      void hair.offsetWidth;
-      hair.classList.add("run");
-      index = next;
-      showCount();
-      await wait(520);
-      hair.classList.remove("run");
-      to.classList.remove("line-in");
-      lock = false;
-      schedule();
-      return;
-    }
-
-    if (kind === "match") {
-      to.classList.add("is-under");
-      arm(to);
-      const flight = fly(from, to);
-      from.style.transition = "opacity .35s ease";
-      from.style.opacity = "0";
-      await flight;
-      from.style.opacity = "";
-      from.style.transition = "";
-      finish(next, true);
-      return;
-    }
-
-    to.classList.add("is-under");
-    arm(to);
-    from.classList.add("is-leaving");
-    from.style.transition = "opacity " + (to.classList.contains("quiet") ? "1s" : ".5s") + " ease";
-    from.style.opacity = "0";
-    await wait(to.classList.contains("quiet") ? 1000 : 520);
-    from.style.opacity = "";
-    from.style.transition = "";
-    finish(next, true);
+    finish(next, keep);
   }
 
   function nextSlide() { go(Math.min(slides.length - 1, index + 1)); }
@@ -199,7 +213,7 @@
   function schedule() {
     clearTimeout(timer);
     if (!playing) return;
-    const dwell = slides[index].classList.contains("quiet") ? 8200 : 5400;
+    const dwell = slides[index].classList.contains("quiet") ? 8200 : 3600;
     timer = setTimeout(function () {
       if (index >= slides.length - 1) {
         playing = false;
