@@ -28,16 +28,17 @@ button, input { font: inherit; }
 
 #viewport {
   height: 100%;
-  display: grid;
-  place-items: center;
-  padding: 12px 12px 72px;
+  position: relative;
+  overflow: hidden;
 }
 
 #stage {
   width: var(--w);
   height: var(--h);
-  position: relative;
-  background: var(--paper);
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  background: #0c0c0e;
   overflow: hidden;
   transform-origin: center center;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
@@ -185,7 +186,7 @@ button, input { font: inherit; }
 
 .stamp {
   flex: none;
-  margin-top: 8px;
+  margin: 8px 36px 0 0;
   border: 3px solid var(--red);
   color: var(--red);
   font-family: var(--text);
@@ -329,11 +330,12 @@ button, input { font: inherit; }
 }
 .doc img {
   width: 100%;
-  height: 390px;
+  height: 320px;
   object-fit: cover;
   object-position: center 45%;
   filter: grayscale(1) contrast(1.04);
 }
+.doc figcaption { font-size: 13px; line-height: 1.3; }
 
 .full .bleedwrap,
 .poster .bleedwrap {
@@ -359,18 +361,18 @@ button, input { font: inherit; }
   z-index: 3;
   left: 40px;
   right: 40px;
-  bottom: 28px;
+  bottom: 22px;
   background: var(--paper);
   color: var(--ink);
-  padding: 16px 22px 12px;
+  padding: 14px 20px 12px;
 }
 .sheet .kicker, .ticker .kicker, .poster .mini .name {
   font-family: var(--black);
   font-size: 28px;
   line-height: 1;
 }
-.sheet .hed { font-size: 52px; margin: 4px 0 8px; }
-.sheet p { font-size: 18px; }
+.sheet .hed { font-size: 46px; margin: 2px 0 6px; }
+.sheet p { font-size: 16.5px; line-height: 1.32; }
 .sheet .cap { margin: 8px 0 0; }
 .full .foot, .poster .foot {
   position: absolute;
@@ -410,21 +412,21 @@ button, input { font: inherit; }
 .giant {
   position: absolute;
   z-index: 3;
-  left: -24px;
-  right: -24px;
-  top: -28px;
+  left: 28px;
+  right: 28px;
+  top: 8px;
   margin: 0;
   text-align: center;
   font-family: var(--serif);
   font-weight: 900;
-  font-size: 250px;
-  line-height: 0.78;
-  letter-spacing: -0.045em;
+  font-size: 188px;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
   text-transform: uppercase;
   color: var(--paper);
 }
 .giant span { display: block; }
-.giant.one { font-size: 440px; top: 70px; letter-spacing: -0.06em; }
+.giant.one { font-size: 250px; top: 120px; letter-spacing: -0.045em; }
 .poster.red .giant { color: #f6efe2; }
 .ticker {
   position: absolute;
@@ -472,9 +474,9 @@ button, input { font: inherit; }
   font-weight: 900;
   letter-spacing: 0.04em;
 }
-.c1 { left: 54px; top: 128px; transform: rotate(-6.5deg); }
-.c2 { left: 560px; top: 108px; transform: rotate(3.5deg); z-index: 3; }
-.c3 { right: 48px; top: 156px; transform: rotate(7deg); }
+.c1 { left: 48px; top: 118px; width: 430px; transform: rotate(-6.5deg); }
+.c2 { left: 560px; top: 100px; width: 430px; transform: rotate(3.5deg); z-index: 3; }
+.c3 { right: 64px; top: 150px; width: 400px; transform: rotate(4deg); }
 .diag {
   position: absolute;
   z-index: 5;
@@ -492,27 +494,7 @@ button, input { font: inherit; }
   transform: rotate(-4deg);
   box-shadow: 6px 6px 0 var(--red);
 }
-.inkring {
-  position: absolute;
-  z-index: 4;
-  width: 168px;
-  height: 112px;
-  border: 3px solid var(--red);
-  border-radius: 50%;
-  left: 250px;
-  top: 168px;
-  transform: rotate(-14deg);
-}
-.pen {
-  position: absolute;
-  z-index: 6;
-  left: 700px;
-  top: 300px;
-  width: 220px;
-  height: 0;
-  border-top: 3px solid var(--red);
-  transform: rotate(-8deg);
-}
+.inkring, .pen { display: none; }
 .closer {
   position: absolute;
   z-index: 6;
@@ -527,12 +509,12 @@ button, input { font: inherit; }
 }
 
 .august .card.big {
-  width: 640px;
+  width: 620px;
   left: 48px;
-  top: 120px;
+  top: 118px;
   transform: rotate(-2deg);
 }
-.august .card.big img { height: 390px; object-position: center 40%; }
+.august .card.big img { height: 340px; object-position: center 40%; }
 .banner {
   margin: 0 0 6px auto;
   display: block;
@@ -551,9 +533,9 @@ button, input { font: inherit; }
   position: absolute;
   right: 48px;
   top: 108px;
-  width: 760px;
+  width: 720px;
   display: grid;
-  gap: 14px;
+  gap: 12px;
   z-index: 3;
 }
 .clip {
@@ -631,6 +613,30 @@ button, input { font: inherit; }
 .colo p { font-size: 14.5px; line-height: 1.35; }
 .colo p + p { margin-top: 6px; }
 
+#burst {
+  position: absolute;
+  inset: 0;
+  z-index: 34;
+  pointer-events: none;
+  opacity: 0;
+}
+#burst.on { opacity: 1; }
+#burst i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48%;
+  height: 2px;
+  background: currentColor;
+  transform-origin: left center;
+  opacity: 0;
+}
+#burst.on i { animation: ray 0.42s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes ray {
+  0% { transform: rotate(var(--a)) scaleX(0.05); opacity: 0.95; }
+  55% { opacity: 0.8; }
+  100% { transform: rotate(var(--a)) scaleX(1); opacity: 0; }
+}
 #wipe, #hair {
   position: absolute;
   z-index: 30;
@@ -792,7 +798,7 @@ button, input { font: inherit; }
 }
 @keyframes fromL3 {
   from { opacity: 0; transform: translateX(-60px) rotate(2deg); }
-  to { opacity: 1; transform: rotate(7deg); }
+  to { opacity: 1; transform: rotate(4deg); }
 }
 @keyframes fromBig {
   from { opacity: 0; transform: translateX(-50px) rotate(-6deg); }
@@ -883,6 +889,9 @@ html.is-phone #viewport {
 }
 
 html.is-phone #stage {
+  position: relative;
+  left: auto;
+  top: auto;
   width: 100%;
   height: calc(100svh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   margin-top: env(safe-area-inset-top);

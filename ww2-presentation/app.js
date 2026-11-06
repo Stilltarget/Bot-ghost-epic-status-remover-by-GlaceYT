@@ -12,6 +12,7 @@
 
   let index = 0;
   let lock = false;
+  let pending = null;
   let playing = false;
   let timer = 0;
   let idleTimer = 0;
@@ -29,12 +30,16 @@
     document.documentElement.classList.toggle("is-phone", phone);
     hint.textContent = phone ? "Swipe sideways" : desktopHint;
     if (phone) {
+      stage.style.left = "";
+      stage.style.top = "";
       stage.style.transform = "none";
       return;
     }
-    const vp = document.getElementById("viewport");
-    const fitted = Math.min(vp.clientWidth / 1600, vp.clientHeight / 900);
-    stage.style.transform = "scale(" + fitted + ")";
+    const chrome = 84;
+    const fitted = Math.min(window.innerWidth / 1600, (window.innerHeight - chrome) / 900);
+    stage.style.left = "50%";
+    stage.style.top = ((window.innerHeight - chrome) / 2) + "px";
+    stage.style.transform = "translate(-50%, -50%) scale(" + fitted + ")";
   }
 
   function applyGroup() {
@@ -60,16 +65,16 @@
   function clearRoles(except) {
     slides.forEach(function (slide) {
       if (slide === except) return;
-      slide.classList.remove("is-current", "is-under", "is-leaving", "is-in", "line-in");
-      slide.style.opacity = "";
-      slide.style.transition = "";
+      slide.classList.remove("is-current", "is-under", "is-leaving", "is-in", "line-in", "slash-in");
+      resetMotion(slide);
     });
   }
 
   function finish(next, keepMotion) {
     const target = slides[next];
     clearRoles(target);
-    target.classList.remove("is-under", "is-leaving", "line-in");
+    target.classList.remove("is-under", "is-leaving", "line-in", "slash-in");
+    resetMotion(target);
     target.classList.add("is-current");
     if (keepMotion) target.classList.add("is-in");
     else arm(target);
@@ -77,6 +82,11 @@
     lock = false;
     showCount();
     schedule();
+    if (pending !== null && pending !== index) {
+      const nextIndex = pending;
+      pending = null;
+      go(nextIndex);
+    }
   }
 
   function wait(ms) {
@@ -102,109 +112,155 @@
     stage.classList.add("hit");
   }
 
-  async function whip(from, to, dir) {
+  const burst = document.getElementById("burst");
+
+  function rays() {
+    if (burst.childElementCount) return;
+    for (let i = 0; i < 16; i++) {
+      const line = document.createElement("i");
+      line.style.setProperty("--a", (i * 22.5) + "deg");
+      line.style.animationDelay = (i % 4) * 0.02 + "s";
+      burst.appendChild(line);
+    }
+  }
+
+  function flashBurst(color) {
+    rays();
+    burst.style.color = color || "#f3efe4";
+    burst.classList.remove("on");
+    void burst.offsetWidth;
+    burst.classList.add("on");
+  }
+
+  async function zoom(from, to) {
+    hitFlash(to.dataset.flash || "#f3efe4");
+    flashBurst(to.dataset.flash === "#b11226" ? "#f6efe2" : "#f3efe4");
+    to.classList.add("is-current");
+    to.style.transition = "none";
+    to.style.transformOrigin = "center center";
+    to.style.transform = "scale(0.38) rotate(-1.5deg)";
+    void to.offsetWidth;
+    from.style.zIndex = "3";
+    from.style.transition = "transform .28s ease-in, opacity .28s ease-in";
+    from.style.transform = "scale(1.18)";
+    from.style.opacity = "0";
+    to.style.transition = "transform .46s cubic-bezier(.12,1.25,.28,1)";
+    to.style.transform = "scale(1) rotate(0deg)";
+    arm(to);
+    await wait(480);
+    resetMotion(from);
+    burst.classList.remove("on");
+  }
+
+  async function pan(from, to, dir) {
     const sign = dir < 0 ? -1 : 1;
     to.classList.add("is-current");
     to.style.transition = "none";
-    to.style.transform = "translate3d(" + (sign * 108) + "%,0,0)";
-    to.style.filter = "blur(10px)";
+    to.style.transform = "translate3d(0," + (sign * 104) + "%,0)";
     void to.offsetWidth;
     from.style.zIndex = "4";
-    from.style.filter = "blur(0px)";
-    from.style.transition = "transform .24s cubic-bezier(.7,0,.15,1), filter .24s";
-    to.style.transition = "transform .3s cubic-bezier(.12,1.2,.22,1), filter .3s";
-    from.style.transform = "translate3d(" + (-sign * 112) + "%,0,0)";
-    from.style.filter = "blur(6px)";
+    from.style.transition = "transform .3s cubic-bezier(.7,0,.15,1)";
+    to.style.transition = "transform .34s cubic-bezier(.14,1.05,.3,1)";
+    from.style.transform = "translate3d(0," + (-sign * 108) + "%,0)";
     to.style.transform = "translate3d(0,0,0)";
-    to.style.filter = "none";
-    await wait(310);
-    resetMotion(from);
-    resetMotion(to);
-  }
-
-  async function smash(from, to) {
-    to.classList.add("is-under");
-    to.style.transition = "none";
-    to.style.transform = "scale(1.55)";
-    to.style.filter = "blur(14px)";
-    void to.offsetWidth;
-    from.style.zIndex = "5";
-    from.style.transition = "transform .2s ease-in, opacity .2s ease-in, filter .2s";
-    to.style.transition = "transform .34s cubic-bezier(.14,1.15,.28,1), filter .28s";
-    from.style.transform = "scale(1.7)";
-    from.style.opacity = "0";
-    from.style.filter = "blur(16px)";
-    to.style.transform = "scale(1)";
-    to.style.filter = "none";
-    arm(to);
     await wait(350);
     resetMotion(from);
-    resetMotion(to);
   }
 
-  async function slash(from, to) {
-    to.classList.add("is-current", "slash-in");
-    from.style.zIndex = "4";
-    from.style.transition = "transform .2s ease-in, opacity .2s ease-in";
-    from.style.transform = "translate3d(-18%,0,0) scale(1.08)";
-    from.style.opacity = "0";
-    hair.classList.remove("run");
-    void hair.offsetWidth;
-    hair.classList.add("run");
-    await wait(240);
-    hair.classList.remove("run");
-    resetMotion(from);
-    to.classList.remove("slash-in");
-  }
-
-  async function impact(from, to) {
-    hitFlash(to.dataset.flash);
-    await wait(70);
-    clearRoles(to);
+  async function truck(from, to, dir) {
+    const sign = dir < 0 ? -1 : 1;
     to.classList.add("is-current");
+    to.style.transition = "none";
+    to.style.transformOrigin = "center center";
+    to.style.transform = "translate3d(" + (sign * 104) + "%,0,0) rotate(" + (sign * 3) + "deg)";
+    to.style.filter = "blur(8px)";
+    void to.offsetWidth;
+    from.style.zIndex = "4";
+    from.style.transition = "transform .26s cubic-bezier(.65,0,.2,1), filter .26s";
+    to.style.transition = "transform .32s cubic-bezier(.12,1.15,.28,1), filter .28s";
+    from.style.transform = "translate3d(" + (-sign * 108) + "%,0,0) rotate(" + (-sign * 4) + "deg)";
+    from.style.filter = "blur(6px)";
+    to.style.transform = "translate3d(0,0,0) rotate(0deg)";
+    to.style.filter = "none";
+    await wait(330);
+    resetMotion(from);
+  }
+
+  async function throwCard(from, to) {
+    to.classList.add("is-current");
+    to.style.transition = "none";
+    to.style.transformOrigin = "70% 60%";
+    to.style.transform = "translate3d(42%, 10%, 0) rotate(9deg) scale(0.55)";
+    void to.offsetWidth;
+    from.style.zIndex = "4";
+    from.style.transformOrigin = "20% 40%";
+    from.style.transition = "transform .32s cubic-bezier(.55,0,.2,1), opacity .32s ease-in";
+    to.style.transition = "transform .4s cubic-bezier(.12,1.35,.28,1)";
+    from.style.transform = "translate3d(-36%, -8%, 0) rotate(-11deg) scale(0.62)";
+    from.style.opacity = "0";
+    to.style.transform = "translate3d(0,0,0) rotate(0deg) scale(1)";
     arm(to);
-    await wait(260);
+    await wait(420);
+    resetMotion(from);
   }
 
   async function fade(from, to) {
-    const slow = to.classList.contains("quiet");
     to.classList.add("is-under");
     arm(to);
     from.classList.add("is-leaving");
-    from.style.transition = "opacity " + (slow ? "1s" : ".28s") + " ease";
+    from.style.transition = "opacity .55s ease";
     from.style.opacity = "0";
-    await wait(slow ? 1000 : 300);
+    await wait(560);
     resetMotion(from);
   }
 
   async function go(next) {
-    if (lock || next === index || next < 0 || next >= slides.length) return;
+    if (next === index || next < 0 || next >= slides.length) return;
+    if (lock) { pending = next; return; }
     lock = true;
     const from = slides[index];
     const to = slides[next];
     const forward = next > index;
-    const kind = reduced ? "cut" : (!forward ? "whip" : (to.dataset.trans || "whip"));
+    const kind = reduced ? "cut" : (!forward ? "truck" : (to.dataset.trans || "truck"));
     let keep = false;
 
     if (kind === "cut") {
       clearRoles(to);
       to.classList.add("is-current");
-    } else if (kind === "impact") {
-      await impact(from, to);
+    } else if (kind === "zoom") {
+      await zoom(from, to);
       keep = true;
-    } else if (kind === "smash") {
-      await smash(from, to);
+    } else if (kind === "pan") {
+      await pan(from, to, forward ? 1 : -1);
+    } else if (kind === "throw") {
+      await throwCard(from, to);
       keep = true;
-    } else if (kind === "slash") {
-      await slash(from, to);
     } else if (kind === "fade") {
       await fade(from, to);
       keep = true;
     } else {
-      await whip(from, to, forward ? 1 : -1);
+      await truck(from, to, forward ? 1 : -1);
     }
 
     finish(next, keep);
+  }
+
+  function intro() {
+    if (reduced || document.documentElement.classList.contains("still")) return;
+    const slide = slides[0];
+    flashBurst("#161616");
+    slide.style.transformOrigin = "center center";
+    slide.style.transition = "none";
+    slide.style.transform = "scale(0.42)";
+    void slide.offsetWidth;
+    slide.style.transition = "transform .62s cubic-bezier(.14,1.2,.3,1)";
+    slide.style.transform = "scale(1)";
+    setTimeout(function () {
+      if (index !== 0) return;
+      slide.style.transition = "";
+      slide.style.transform = "";
+      burst.classList.remove("on");
+    }, 680);
   }
 
   function nextSlide() { go(Math.min(slides.length - 1, index + 1)); }
@@ -326,5 +382,6 @@
   }
   showCount();
   poke();
+  if (!(jump > 0)) intro();
   window.__deck = { go: go, count: function () { return slides.length; } };
 })();
